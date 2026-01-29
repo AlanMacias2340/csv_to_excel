@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from app.api.v1.routes import router as v1_router
 from contextlib import asynccontextmanager
+from pathlib import Path
+from starlette.staticfiles import StaticFiles
+from starlette.templating import Jinja2Templates
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -9,6 +12,11 @@ async def lifespan(app: FastAPI):
     # shutdown tasks here
 
 app = FastAPI(title="CSV to Excel API", version="0.1.0", lifespan=lifespan)
+
+# Serve static files and templates
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 app.include_router(v1_router, prefix="/api/v1")
 

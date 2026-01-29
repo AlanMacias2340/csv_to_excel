@@ -19,3 +19,12 @@ async def test_upload_page():
     # input name should be 'files' and it should support multiple selection
     assert 'name="files"' in r.text
     assert 'multiple' in r.text
+
+@pytest.mark.asyncio
+async def test_static_assets_served():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        r_css = await ac.get("/static/css/style.css")
+        r_js = await ac.get("/static/js/upload.js")
+
+    assert r_css.status_code == 200
+    assert 'file-list' in r_js.text

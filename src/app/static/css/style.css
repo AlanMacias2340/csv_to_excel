@@ -1,0 +1,4 @@
+body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+#file-list .file-item { display:flex; justify-content:space-between; padding:0.25rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.03); }
+#file-list .file-name { font-weight:500; }
+#file-list .file-status { color:#6c757d; }

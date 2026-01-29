@@ -7,3 +7,5 @@ pytest-asyncio
 httpx
 openpyxl
 python-multipart
+jinja2
+aiofiles

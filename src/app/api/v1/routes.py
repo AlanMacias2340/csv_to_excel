@@ -1,70 +1,25 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
 from fastapi.responses import StreamingResponse, HTMLResponse
+from starlette.templating import Jinja2Templates
 import csv
 from io import StringIO, BytesIO
 from openpyxl import Workbook
+from pathlib import Path
 
 router = APIRouter()
+
+# Templates directory relative to this file
+# routes.py is at src/app/api/v1; templates live at src/app/templates -> use parents[2]
+templates = Jinja2Templates(directory=str(Path(__file__).resolve().parents[2] / "templates"))
 
 @router.get("/hello", tags=["example"])
 async def hello():
     return {"message": "Hello, world!"}
 
 @router.get("/upload", response_class=HTMLResponse, tags=["ui"])
-async def upload_page():
-    html = """<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CSV → Excel Converter</title>
-    <style>
-      body { font-family: Arial, sans-serif; margin: 2rem; }
-      .card { max-width: 600px; padding: 1rem; border: 1px solid #e1e1e1; border-radius: 8px; }
-      input[type=file] { display:block; margin-bottom: 1rem; }
-      button { padding: 0.5rem 1rem; }
-    </style>
-  </head>
-  <body>
-    <div class="card">
-      <h1>CSV → Excel</h1>
-      <p>Select one or more CSV files to convert to Excel (.xlsx). Multiple files will be returned as a ZIP archive.</p>
-      <form id="upload-form" action="/api/v1/convert" method="post" enctype="multipart/form-data">
-        <input type="file" name="files" accept=".csv,text/csv" multiple required />
-        <button type="submit">Convert & Download</button>
-      </form>
-      <hr />
-      <p>Or use the API directly at <code>/api/v1/convert</code></p>
-    </div>
-    <script>
-      // Use fetch to download the converted file without leaving the page
-      document.getElementById('upload-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const form = e.target;
-        const fileInput = form.querySelector('input[type=file]');
-        if (!fileInput.files.length) return;
-        const data = new FormData();
-        for (const f of fileInput.files) data.append('files', f);
-        const resp = await fetch(form.action, { method: 'POST', body: data });
-        if (!resp.ok) {
-          const text = await resp.text();
-          alert('Upload failed: ' + resp.status + '\n' + text);
-          return;
-        }
-        const blob = await resp.blob();
-        const contentDisposition = resp.headers.get('content-disposition') || '';
-        let filename = 'converted';
-        const m = /filename="(?<name>.+)"/.exec(contentDisposition);
-        if (m && m.groups && m.groups.name) filename = m.groups.name;
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-        window.URL.revokeObjectURL(url);
-      });
-    </script>
-  </body>
-</html>"""
-    return HTMLResponse(content=html)
+async def upload_page(request: Request):
+    """Render the upload page (Jinja2 template)."""
+    return templates.TemplateResponse("upload.html", {"request": request})
 
 @router.post("/convert", tags=["conversion"])
 async def convert_csv_to_excel(files: list[UploadFile] = File(...)):
