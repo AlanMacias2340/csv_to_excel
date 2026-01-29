@@ -25,6 +25,7 @@ PYTHONPATH=src uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 - Health check: GET http://127.0.0.1:8000/health
 - Example: GET http://127.0.0.1:8000/api/v1/hello
+- Upload page: GET http://127.0.0.1:8000/api/v1/upload (web UI for converting CSV to Excel)
 
 ## Tests
 
