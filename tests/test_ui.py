@@ -16,4 +16,6 @@ async def test_upload_page():
     assert r.status_code == 200
     assert "<form" in r.text
     assert 'enctype="multipart/form-data"' in r.text
-    assert 'name="file"' in r.text
+    # input name should be 'files' and it should support multiple selection
+    assert 'name="files"' in r.text
+    assert 'multiple' in r.text
