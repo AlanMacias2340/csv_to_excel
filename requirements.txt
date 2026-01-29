@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+pytest
+pytest-asyncio
+httpx
+openpyxl
+python-multipart
