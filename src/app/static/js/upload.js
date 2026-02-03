@@ -1,33 +1,40 @@
-const form = document.getElementById('upload-form');
-const fileInput = document.getElementById('file-input');
-const fileList = document.getElementById('file-list');
-const status = document.getElementById('status');
+// CSV form
+const csvForm = document.getElementById('csv-form');
+const csvInput = document.getElementById('file-input');
+const csvList = document.getElementById('file-list');
+const csvStatus = document.getElementById('csv-status');
 
-function renderFiles(files) {
-    fileList.innerHTML = '';
+// Image form
+const imageForm = document.getElementById('image-form');
+const imageInput = document.getElementById('image-input');
+const imageList = document.getElementById('image-list');
+const imageStatus = document.getElementById('image-status');
+
+function renderList(container, files) {
+    container.innerHTML = '';
     Array.from(files).forEach(f => {
         const div = document.createElement('div');
         div.className = 'file-item';
         div.innerHTML = `<div class="file-name">${f.name}</div><div class="file-status">ready</div>`;
-        fileList.appendChild(div);
+        container.appendChild(div);
     });
 }
 
-fileInput.addEventListener('change', (e) => renderFiles(e.target.files));
+csvInput.addEventListener('change', (e) => renderList(csvList, e.target.files));
+imageInput.addEventListener('change', (e) => renderList(imageList, e.target.files));
 
-form.addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const files = fileInput.files;
+async function submitFiles(form, inputEl, statusEl, fieldName) {
+    const files = inputEl.files;
     if (!files.length) return;
-    status.textContent = 'Uploading...';
+    statusEl.textContent = 'Uploading...';
     const data = new FormData();
-    for (const f of files) data.append('files', f);
+    for (const f of files) data.append(fieldName, f);
 
     try {
         const resp = await fetch(form.action, { method: 'POST', body: data });
         if (!resp.ok) {
             const txt = await resp.text();
-            status.textContent = 'Upload failed';
+            statusEl.textContent = 'Upload failed';
             alert('Upload failed: ' + resp.status + '\n' + txt);
             return;
         }
@@ -40,9 +47,19 @@ form.addEventListener('submit', async function (e) {
         const a = document.createElement('a');
         a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
         window.URL.revokeObjectURL(url);
-        status.textContent = 'Done';
+        statusEl.textContent = 'Done';
     } catch (err) {
-        status.textContent = 'Error';
+        statusEl.textContent = 'Error';
         alert('Upload error: ' + err.message);
     }
+}
+
+csvForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitFiles(csvForm, csvInput, csvStatus, 'files');
+});
+
+imageForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitFiles(imageForm, imageInput, imageStatus, 'images');
 });

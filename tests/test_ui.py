@@ -19,6 +19,10 @@ async def test_upload_page():
     # input name should be 'files' and it should support multiple selection
     assert 'name="files"' in r.text
     assert 'multiple' in r.text
+    # image conversion UI
+    assert 'name="images"' in r.text
+    assert 'id="image-input"' in r.text
+    assert 'accept="image/png"' in r.text
 
 @pytest.mark.asyncio
 async def test_static_assets_served():

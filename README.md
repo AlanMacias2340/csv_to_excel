@@ -27,6 +27,8 @@ PYTHONPATH=src uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 - Example: GET http://127.0.0.1:8000/api/v1/hello
 - Upload page: GET http://127.0.0.1:8000/api/v1/upload (web UI for converting CSV to Excel). The page supports selecting multiple CSV files; when multiple files are uploaded the server returns a ZIP archive of converted XLSX files. The UI now uses a Jinja2 template and serves modern static assets (CSS, JS) from `/static`.
 
+Image conversion: POST `/api/v1/convert-image` accepts PNG uploads and returns a single `.webp` (for one image) or a ZIP archive of `.webp` files (for multiple images). The web UI includes an **Image** tab allowing PNG → WebP conversion directly from the browser.
+
 ## Tests
 
 Run tests with:

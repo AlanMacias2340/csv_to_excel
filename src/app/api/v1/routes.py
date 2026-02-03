@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse, HTMLResponse
 from starlette.templating import Jinja2Templates
 import csv
 from io import StringIO, BytesIO
+from PIL import Image
 from openpyxl import Workbook
 from pathlib import Path
 
@@ -19,7 +20,8 @@ async def hello():
 @router.get("/upload", response_class=HTMLResponse, tags=["ui"])
 async def upload_page(request: Request):
     """Render the upload page (Jinja2 template)."""
-    return templates.TemplateResponse("upload.html", {"request": request})
+    # TemplateResponse now expects the Request first to avoid deprecation warnings
+    return templates.TemplateResponse(request, "upload.html", {"request": request})
 
 @router.post("/convert", tags=["conversion"])
 async def convert_csv_to_excel(files: list[UploadFile] = File(...)):
@@ -72,4 +74,40 @@ async def convert_csv_to_excel(files: list[UploadFile] = File(...)):
             zf.writestr(fname, data)
     zip_io.seek(0)
     headers = {"Content-Disposition": 'attachment; filename="converted_files.zip"'}
+    return StreamingResponse(zip_io, media_type="application/zip", headers=headers)
+
+@router.post("/convert-image", tags=["conversion"])
+async def convert_png_to_webp(images: list[UploadFile] = File(...)):
+    """Convert one or more PNG images to WebP. Single image -> returns .webp, multiple -> returns ZIP of .webp files."""
+    if not images:
+        raise HTTPException(status_code=400, detail="No images uploaded.")
+
+    results = []
+    for img in images:
+        if img.content_type != "image/png":
+            raise HTTPException(status_code=400, detail=f"Invalid image type for {img.filename}. Only PNG supported.")
+        contents = await img.read()
+        try:
+            im = Image.open(BytesIO(contents)).convert('RGBA')
+            out = BytesIO()
+            im.save(out, format='WEBP', lossless=True)
+            out.seek(0)
+            fname = (img.filename.rsplit('.', 1)[0] if img.filename else 'converted') + '.webp'
+            results.append((fname, out.getvalue()))
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Unable to process image {img.filename}.")
+
+    # single image -> return webp
+    if len(results) == 1:
+        fname, data = results[0]
+        return StreamingResponse(BytesIO(data), media_type="image/webp", headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+
+    # multiple images -> zip
+    import zipfile
+    zip_io = BytesIO()
+    with zipfile.ZipFile(zip_io, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
+        for fname, data in results:
+            zf.writestr(fname, data)
+    zip_io.seek(0)
+    headers = {"Content-Disposition": 'attachment; filename="converted_images.zip"'}
     return StreamingResponse(zip_io, media_type="application/zip", headers=headers)
