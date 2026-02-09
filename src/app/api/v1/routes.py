@@ -90,7 +90,8 @@ async def convert_png_to_webp(images: list[UploadFile] = File(...)):
         try:
             im = Image.open(BytesIO(contents)).convert('RGBA')
             out = BytesIO()
-            im.save(out, format='WEBP', lossless=True)
+            # Use lossy compression with quality=85 for better file size reduction
+            im.save(out, format='WEBP', quality=85, method=6)
             out.seek(0)
             fname = (img.filename.rsplit('.', 1)[0] if img.filename else 'converted') + '.webp'
             results.append((fname, out.getvalue()))
