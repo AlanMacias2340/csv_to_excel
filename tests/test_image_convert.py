@@ -5,6 +5,7 @@ from httpx import AsyncClient, ASGITransport
 from io import BytesIO
 import zipfile
 from PIL import Image
+import fitz  # PyMuPDF
 
 # ensure src is on path so `import app` works when running pytest from project root
 sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
@@ -65,6 +66,24 @@ async def test_convert_webp_to_png():
     files = [("images", ("test.webp", webp_bytes, "image/webp"))]
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         r = await ac.post("/api/v1/convert-webp", files=files)
+
+    assert r.status_code == 200
+    assert r.headers.get('content-type') == 'image/png'
+    # PNG starts with PNG signature
+    assert r.content[:4] == b'\x89PNG'
+
+@pytest.mark.asyncio
+async def test_convert_pdf_to_png():
+    # create a simple PDF with one page
+    pdf_doc = fitz.open()
+    page = pdf_doc.new_page(width=200, height=200)
+    page.insert_text((50, 100), "Test PDF", fontsize=20)
+    pdf_bytes = pdf_doc.tobytes()
+    pdf_doc.close()
+
+    files = [("files", ("test.pdf", pdf_bytes, "application/pdf"))]
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        r = await ac.post("/api/v1/convert-pdf", files=files)
 
     assert r.status_code == 200
     assert r.headers.get('content-type') == 'image/png'

@@ -16,6 +16,12 @@ const webpInput = document.getElementById('webp-input');
 const webpList = document.getElementById('webp-list');
 const webpStatus = document.getElementById('webp-status');
 
+// PDF form
+const pdfForm = document.getElementById('pdf-form');
+const pdfInput = document.getElementById('pdf-input');
+const pdfList = document.getElementById('pdf-list');
+const pdfStatus = document.getElementById('pdf-status');
+
 function renderList(container, files) {
     container.innerHTML = '';
     Array.from(files).forEach(f => {
@@ -29,6 +35,7 @@ function renderList(container, files) {
 csvInput.addEventListener('change', (e) => renderList(csvList, e.target.files));
 imageInput.addEventListener('change', (e) => renderList(imageList, e.target.files));
 webpInput.addEventListener('change', (e) => renderList(webpList, e.target.files));
+pdfInput.addEventListener('change', (e) => renderList(pdfList, e.target.files));
 
 async function submitFiles(form, inputEl, statusEl, fieldName) {
     const files = inputEl.files;
@@ -74,4 +81,9 @@ imageForm.addEventListener('submit', function (e) {
 webpForm.addEventListener('submit', function (e) {
     e.preventDefault();
     submitFiles(webpForm, webpInput, webpStatus, 'images');
+});
+
+pdfForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitFiles(pdfForm, pdfInput, pdfStatus, 'files');
 });

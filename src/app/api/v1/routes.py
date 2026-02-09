@@ -4,6 +4,7 @@ from starlette.templating import Jinja2Templates
 import csv
 from io import StringIO, BytesIO
 from PIL import Image
+import fitz  # PyMuPDF
 from openpyxl import Workbook
 from pathlib import Path
 
@@ -147,4 +148,49 @@ async def convert_webp_to_png(images: list[UploadFile] = File(...)):
             zf.writestr(fname, data)
     zip_io.seek(0)
     headers = {"Content-Disposition": 'attachment; filename="converted_webp_images.zip"'}
+    return StreamingResponse(zip_io, media_type="application/zip", headers=headers)
+
+@router.post("/convert-pdf", tags=["conversion"])
+async def convert_pdf_to_png(files: list[UploadFile] = File(...)):
+    """Convert PDF pages to PNG. Each page becomes a PNG. Returns single PNG or ZIP."""
+    if not files:
+        raise HTTPException(status_code=400, detail="No files uploaded.")
+
+    results = []  # list of (filename, png_bytes)
+    for file in files:
+        if file.content_type != "application/pdf":
+            raise HTTPException(status_code=400, detail=f"Invalid file type for {file.filename}. Only PDF supported.")
+        contents = await file.read()
+        try:
+            pdf_doc = fitz.open(stream=contents, filetype="pdf")
+            base_name = file.filename.rsplit('.', 1)[0] if file.filename else 'converted'
+            
+            for page_num in range(len(pdf_doc)):
+                page = pdf_doc[page_num]
+                # Render page to pixmap at 2x resolution (dpi=144)
+                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                png_bytes = pix.tobytes("png")
+                
+                if len(pdf_doc) == 1:
+                    fname = f"{base_name}.png"
+                else:
+                    fname = f"{base_name}_page_{page_num + 1}.png"
+                results.append((fname, png_bytes))
+            pdf_doc.close()
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Unable to process PDF {file.filename}: {str(e)}")
+
+    # single PNG -> return it
+    if len(results) == 1:
+        fname, data = results[0]
+        return StreamingResponse(BytesIO(data), media_type="image/png", headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+
+    # multiple PNGs -> zip
+    import zipfile
+    zip_io = BytesIO()
+    with zipfile.ZipFile(zip_io, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
+        for fname, data in results:
+            zf.writestr(fname, data)
+    zip_io.seek(0)
+    headers = {"Content-Disposition": 'attachment; filename="converted_pdf_images.zip"'}
     return StreamingResponse(zip_io, media_type="application/zip", headers=headers)

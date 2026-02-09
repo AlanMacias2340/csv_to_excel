@@ -24,6 +24,9 @@
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="webp-tab" data-bs-toggle="tab" data-bs-target="#webp" type="button" role="tab" aria-controls="webp" aria-selected="false">WebP → PNG</button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="pdf-tab" data-bs-toggle="tab" data-bs-target="#pdf" type="button" role="tab" aria-controls="pdf" aria-selected="false">PDF → PNG</button>
+            </li>
           </ul>
           <div class="tab-content mt-3" id="convertTabsContent">
             <div class="tab-pane fade show active" id="csv" role="tabpanel" aria-labelledby="csv-tab">
@@ -63,6 +66,19 @@
                 </div>
               </form>
               <div id="webp-list" class="mt-3"></div>
+            </div>
+
+            <div class="tab-pane fade" id="pdf" role="tabpanel" aria-labelledby="pdf-tab">
+              <form id="pdf-form" action="/api/v1/convert-pdf" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <input class="form-control" type="file" name="files" id="pdf-input" accept="application/pdf,.pdf" multiple required />
+                </div>
+                <div class="mb-3">
+                  <button class="btn btn-primary" type="submit">Convert & Download</button>
+                  <span id="pdf-status" class="ms-3 text-muted"></span>
+                </div>
+              </form>
+              <div id="pdf-list" class="mt-3"></div>
             </div>
           </div>
 
