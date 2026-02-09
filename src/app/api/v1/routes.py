@@ -112,3 +112,39 @@ async def convert_png_to_webp(images: list[UploadFile] = File(...)):
     zip_io.seek(0)
     headers = {"Content-Disposition": 'attachment; filename="converted_images.zip"'}
     return StreamingResponse(zip_io, media_type="application/zip", headers=headers)
+
+@router.post("/convert-webp", tags=["conversion"])
+async def convert_webp_to_png(images: list[UploadFile] = File(...)):
+    """Convert one or more WebP images to PNG. Single image -> returns .png, multiple -> returns ZIP of .png files."""
+    if not images:
+        raise HTTPException(status_code=400, detail="No images uploaded.")
+
+    results = []
+    for img in images:
+        if img.content_type != "image/webp":
+            raise HTTPException(status_code=400, detail=f"Invalid image type for {img.filename}. Only WebP supported.")
+        contents = await img.read()
+        try:
+            im = Image.open(BytesIO(contents))
+            out = BytesIO()
+            im.save(out, format='PNG')
+            out.seek(0)
+            fname = (img.filename.rsplit('.', 1)[0] if img.filename else 'converted') + '.png'
+            results.append((fname, out.getvalue()))
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Unable to process image {img.filename}.")
+
+    # single image -> return png
+    if len(results) == 1:
+        fname, data = results[0]
+        return StreamingResponse(BytesIO(data), media_type="image/png", headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+
+    # multiple images -> zip
+    import zipfile
+    zip_io = BytesIO()
+    with zipfile.ZipFile(zip_io, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:
+        for fname, data in results:
+            zf.writestr(fname, data)
+    zip_io.seek(0)
+    headers = {"Content-Disposition": 'attachment; filename="converted_webp_images.zip"'}
+    return StreamingResponse(zip_io, media_type="application/zip", headers=headers)

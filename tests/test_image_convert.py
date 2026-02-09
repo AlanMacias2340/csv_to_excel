@@ -53,3 +53,20 @@ async def test_convert_multiple_png_to_zip():
     for name in names:
         data = z.read(name)
         assert data[:4] == b'RIFF'
+
+@pytest.mark.asyncio
+async def test_convert_webp_to_png():
+    # create a small WebP
+    img = Image.new('RGBA', (10, 10), (255, 128, 0, 255))
+    buf = BytesIO()
+    img.save(buf, format='WEBP')
+    webp_bytes = buf.getvalue()
+
+    files = [("images", ("test.webp", webp_bytes, "image/webp"))]
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        r = await ac.post("/api/v1/convert-webp", files=files)
+
+    assert r.status_code == 200
+    assert r.headers.get('content-type') == 'image/png'
+    # PNG starts with PNG signature
+    assert r.content[:4] == b'\x89PNG'

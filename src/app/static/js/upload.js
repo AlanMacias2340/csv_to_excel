@@ -10,6 +10,12 @@ const imageInput = document.getElementById('image-input');
 const imageList = document.getElementById('image-list');
 const imageStatus = document.getElementById('image-status');
 
+// WebP form
+const webpForm = document.getElementById('webp-form');
+const webpInput = document.getElementById('webp-input');
+const webpList = document.getElementById('webp-list');
+const webpStatus = document.getElementById('webp-status');
+
 function renderList(container, files) {
     container.innerHTML = '';
     Array.from(files).forEach(f => {
@@ -22,6 +28,7 @@ function renderList(container, files) {
 
 csvInput.addEventListener('change', (e) => renderList(csvList, e.target.files));
 imageInput.addEventListener('change', (e) => renderList(imageList, e.target.files));
+webpInput.addEventListener('change', (e) => renderList(webpList, e.target.files));
 
 async function submitFiles(form, inputEl, statusEl, fieldName) {
     const files = inputEl.files;
@@ -62,4 +69,9 @@ csvForm.addEventListener('submit', function (e) {
 imageForm.addEventListener('submit', function (e) {
     e.preventDefault();
     submitFiles(imageForm, imageInput, imageStatus, 'images');
+});
+
+webpForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitFiles(webpForm, webpInput, webpStatus, 'images');
 });

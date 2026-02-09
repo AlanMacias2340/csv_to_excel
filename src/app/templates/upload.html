@@ -21,6 +21,9 @@
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="image-tab" data-bs-toggle="tab" data-bs-target="#image" type="button" role="tab" aria-controls="image" aria-selected="false">PNG → WebP</button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="webp-tab" data-bs-toggle="tab" data-bs-target="#webp" type="button" role="tab" aria-controls="webp" aria-selected="false">WebP → PNG</button>
+            </li>
           </ul>
           <div class="tab-content mt-3" id="convertTabsContent">
             <div class="tab-pane fade show active" id="csv" role="tabpanel" aria-labelledby="csv-tab">
@@ -47,6 +50,19 @@
                 </div>
               </form>
               <div id="image-list" class="mt-3"></div>
+            </div>
+
+            <div class="tab-pane fade" id="webp" role="tabpanel" aria-labelledby="webp-tab">
+              <form id="webp-form" action="/api/v1/convert-webp" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <input class="form-control" type="file" name="images" id="webp-input" accept="image/webp" multiple required />
+                </div>
+                <div class="mb-3">
+                  <button class="btn btn-primary" type="submit">Convert & Download</button>
+                  <span id="webp-status" class="ms-3 text-muted"></span>
+                </div>
+              </form>
+              <div id="webp-list" class="mt-3"></div>
             </div>
           </div>
 
